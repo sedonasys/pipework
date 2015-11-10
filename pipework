@@ -24,6 +24,12 @@ if [ "$2" = "-i" ]; then
   shift 2
 fi
 
+CONTAINER_BR_NAME=
+if [ "$2" = "-cb" ]; then
+  CONTAINER_BR_NAME=$3
+  shift 2
+fi
+
 GUESTNAME=$2
 IPADDR=$3
 MACADDR=$4
@@ -287,6 +293,10 @@ else
     ip netns exec "$NSPID" ip route delete default >/dev/null 2>&1 && true
   }
   ip netns exec "$NSPID" ip link set "$CONTAINER_IFNAME" up
+  [ "$CONTAINER_BR_NAME" ] && {
+    ip netns exec "$NSPID" brctl addif "$CONTAINER_BR_NAME" "$CONTAINER_IFNAME"
+    ip netns exec "$NSPID" ip link set "$CONTAINER_BR_NAME" up
+  }
   [ "$GATEWAY" ] && {
     ip netns exec "$NSPID" ip route get "$GATEWAY" >/dev/null 2>&1 || \
     ip netns exec "$NSPID" ip route add "$GATEWAY/32" dev "$CONTAINER_IFNAME"
